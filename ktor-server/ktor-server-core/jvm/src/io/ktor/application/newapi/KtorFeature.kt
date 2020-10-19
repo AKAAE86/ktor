@@ -10,23 +10,37 @@ import io.ktor.response.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
 
+public interface FeatureContext {
+    public fun onCall(callback: (ApplicationCall) -> Unit): Unit
+
+    public fun onReceive(callback: (ApplicationCall) -> Unit): Unit
+
+    public fun onSend(callback: (ApplicationCall) -> Unit): Unit
+}
+
 public abstract class KtorFeature<Configuration : Any>(
     public val name: String
 ) :
-    ApplicationFeature<ApplicationCallPipeline, Configuration, KtorFeature<Configuration>> {
+    ApplicationFeature<ApplicationCallPipeline, Configuration, KtorFeature<Configuration>>, FeatureContext {
 
     override val key: AttributeKey<KtorFeature<Configuration>> = AttributeKey(name)
 
-    protected data class Interception(
-        val phase: PipelinePhase,
-        val action: (Pipeline<Unit, ApplicationCall>) -> Unit
-    )
-
-    protected val interceptions: MutableList<Interception> = mutableListOf()
-
     public abstract val configuration: Configuration
 
-    private fun onDefaultPhase(phase: PipelinePhase, callback: (ApplicationCall) -> Unit) {
+    public data class Interception(
+        val phase: PipelinePhase,
+        val action: (Pipeline<*, ApplicationCall>) -> Unit
+    )
+
+    protected val callInterceptions: MutableList<Interception> = mutableListOf()
+    protected val receiveInterceptions: MutableList<Interception> = mutableListOf()
+    protected val sendInterceptions: MutableList<Interception> = mutableListOf()
+
+    private fun onDefaultPhase(
+        interceptions: MutableList<Interception>,
+        phase: PipelinePhase,
+        callback: (ApplicationCall) -> Unit
+    ) {
         interceptions.add(Interception(
             phase,
             action = { pipeline ->
@@ -40,16 +54,16 @@ public abstract class KtorFeature<Configuration : Any>(
 
     public class CallContext(private val feature: KtorFeature<*>) {
         public fun monitoring(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationCallPipeline.Monitoring, callback)
+            feature.onDefaultPhase(feature.callInterceptions, ApplicationCallPipeline.Monitoring, callback)
 
         public fun setup(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationCallPipeline.Setup, callback)
+            feature.onDefaultPhase(feature.callInterceptions, ApplicationCallPipeline.Setup, callback)
 
         public fun fallback(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationCallPipeline.Fallback, callback)
+            feature.onDefaultPhase(feature.callInterceptions, ApplicationCallPipeline.Fallback, callback)
 
         public fun middleware(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationCallPipeline.Features, callback)
+            feature.onDefaultPhase(feature.callInterceptions, ApplicationCallPipeline.Features, callback)
     }
 
     // AppilicationCallPipeline interceptor
@@ -57,7 +71,7 @@ public abstract class KtorFeature<Configuration : Any>(
         CallContext(this).build()
 
     // default
-    public fun onCall(callback: (ApplicationCall) -> Unit): Unit =
+    public override fun onCall(callback: (ApplicationCall) -> Unit): Unit =
         onCallBuilder {
             middleware {
                 callback(it)
@@ -67,13 +81,13 @@ public abstract class KtorFeature<Configuration : Any>(
 
     public class ReceiveContext(private val feature: KtorFeature<*>) {
         public fun beforeReceive(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationReceivePipeline.Before, callback)
+            feature.onDefaultPhase(feature.receiveInterceptions, ApplicationReceivePipeline.Before, callback)
 
         public fun afterReceive(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationReceivePipeline.After, callback)
+            feature.onDefaultPhase(feature.receiveInterceptions, ApplicationReceivePipeline.After, callback)
 
         public fun onReceive(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationReceivePipeline.Transform, callback)
+            feature.onDefaultPhase(feature.receiveInterceptions, ApplicationReceivePipeline.Transform, callback)
     }
 
     // ApplicationReceivePipeline interceptor
@@ -81,7 +95,7 @@ public abstract class KtorFeature<Configuration : Any>(
         ReceiveContext(this).build()
 
     // default
-    public fun onCallReceive(callback: (ApplicationCall) -> Unit): Unit =
+    public override fun onReceive(callback: (ApplicationCall) -> Unit): Unit =
         onCallReceiveBuilder {
             onReceive {
                 callback(it)
@@ -90,16 +104,16 @@ public abstract class KtorFeature<Configuration : Any>(
 
     public class SendContext(private val feature: KtorFeature<*>) {
         public fun beforeSend(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationSendPipeline.Before, callback)
+            feature.onDefaultPhase(feature.sendInterceptions, ApplicationSendPipeline.Before, callback)
 
         public fun afterSend(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationSendPipeline.After, callback)
+            feature.onDefaultPhase(feature.sendInterceptions, ApplicationSendPipeline.After, callback)
 
         public fun onSend(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationSendPipeline.Transform, callback)
+            feature.onDefaultPhase(feature.sendInterceptions, ApplicationSendPipeline.Transform, callback)
 
         public fun contentEncoding(callback: (ApplicationCall) -> Unit): Unit =
-            feature.onDefaultPhase(ApplicationSendPipeline.ContentEncoding, callback)
+            feature.onDefaultPhase(feature.sendInterceptions, ApplicationSendPipeline.ContentEncoding, callback)
     }
 
     // ApplicationSendPipeline interceptor
@@ -107,60 +121,100 @@ public abstract class KtorFeature<Configuration : Any>(
         SendContext(this).build()
 
     // default
-    public fun onCallSend(callback: (ApplicationCall) -> Unit): Unit =
+    public override fun onSend(callback: (ApplicationCall) -> Unit): Unit =
         onCallSendBuilder {
             onSend {
                 callback(it)
             }
         }
 
-    protected val phases: List<PipelinePhase> = interceptions.map { it.phase }
-
-    protected fun sortedPhases(pipeline: Pipeline<Unit, ApplicationCall>): List<PipelinePhase> = phases.sortedBy {
-        if (!pipeline.items.contains(it)) {
-            throw FeatureNotInstalledException(this)
-        }
-
-        pipeline.items.indexOf(it)
-    }
 
     private var index = 0
-
     private fun newPhase(): PipelinePhase = PipelinePhase("${name}Phase${index++}")
 
-    public fun afterFeature(feature: KtorFeature<*>, callback: (ApplicationCall) -> Unit) {
-        val currentPhase = newPhase()
+    public abstract class RelativeFeatureContext(private val feature: KtorFeature<*>) : FeatureContext {
+        protected fun sortedPhases(
+            interceptions: List<Interception>,
+            pipeline: Pipeline<*, ApplicationCall>
+        ): List<PipelinePhase> =
+            interceptions
+                .map { it.phase }
+                .sortedBy {
+                    if (!pipeline.items.contains(it)) {
+                        throw FeatureNotInstalledException(feature)
+                    }
 
-        interceptions.add(Interception(
-            phase = ApplicationCallPipeline.Setup,
-            action = { pipeline ->
-                feature.sortedPhases(pipeline).lastOrNull()?.let { lastDependentPhase ->
-                    pipeline.insertPhaseAfter(lastDependentPhase, currentPhase)
+                    pipeline.items.indexOf(it)
                 }
 
-                pipeline.intercept(currentPhase) {
-                    callback(call)
-                }
-            }
-        ))
+        public abstract fun selectPhase(phases: List<PipelinePhase>): PipelinePhase?
+
+        public abstract fun insertPhase(
+            pipeline: Pipeline<*, ApplicationCall>,
+            relativePhase: PipelinePhase,
+            newPhase: PipelinePhase
+        )
+
+        private fun onDefaultPhase(interceptions: MutableList<Interception>, callback: (ApplicationCall) -> Unit) {
+            val currentPhase = feature.newPhase()
+
+            interceptions.add(
+                Interception(
+                    currentPhase,
+                    action = { pipeline ->
+                        val phases = sortedPhases(feature.callInterceptions, pipeline)
+                        selectPhase(phases)?.let { lastDependentPhase ->
+                            insertPhase(pipeline, lastDependentPhase, currentPhase)
+                        }
+                        pipeline.intercept(currentPhase) {
+                            callback(call)
+                        }
+                    })
+            )
+        }
+
+        override fun onCall(callback: (ApplicationCall) -> Unit): Unit =
+            onDefaultPhase(feature.callInterceptions, callback)
+
+        override fun onReceive(callback: (ApplicationCall) -> Unit): Unit =
+            onDefaultPhase(feature.receiveInterceptions, callback)
+
+        override fun onSend(callback: (ApplicationCall) -> Unit): Unit =
+            onDefaultPhase(feature.sendInterceptions, callback)
     }
 
-    public fun beforeFeature(feature: KtorFeature<*>, callback: (ApplicationCall) -> Unit) {
-        val currentPhase = newPhase()
+    public class AfterFeatureContext(feature: KtorFeature<*>) : RelativeFeatureContext(feature) {
+        override fun selectPhase(phases: List<PipelinePhase>): PipelinePhase? = phases.lastOrNull()
 
-        interceptions.add(Interception(
-            phase = currentPhase,
-            action = { pipeline ->
-                feature.sortedPhases(pipeline).firstOrNull()?.let { firstDependentPhase ->
-                    pipeline.insertPhaseBefore(firstDependentPhase, currentPhase)
-                }
+        override fun insertPhase(
+            pipeline: Pipeline<*, ApplicationCall>,
+            relativePhase: PipelinePhase,
+            newPhase: PipelinePhase
+        ) {
+            pipeline.insertPhaseAfter(relativePhase, newPhase)
+        }
 
-                pipeline.intercept(currentPhase) {
-                    callback(call)
-                }
-            }
-        ))
     }
+
+    public class BeforeFeatureContext(feature: KtorFeature<*>) : RelativeFeatureContext(feature) {
+        override fun selectPhase(phases: List<PipelinePhase>): PipelinePhase? = phases.firstOrNull()
+
+        override fun insertPhase(
+            pipeline: Pipeline<*, ApplicationCall>,
+            relativePhase: PipelinePhase,
+            newPhase: PipelinePhase
+        ) {
+            pipeline.insertPhaseBefore(relativePhase, newPhase)
+        }
+
+    }
+
+    public fun afterFeature(feature: KtorFeature<*>, build: AfterFeatureContext.() -> Unit): Unit =
+        AfterFeatureContext(this).build()
+
+
+    public fun beforeFeature(feature: KtorFeature<*>, build: BeforeFeatureContext.() -> Unit): Unit =
+        BeforeFeatureContext(this).build()
 
     public companion object {
         public fun <Configuration : Any> makeFeature(
@@ -172,15 +226,23 @@ public abstract class KtorFeature<Configuration : Any>(
             override val configuration: Configuration = initialConfiguration
 
             override fun install(
-                pipeline: ApplicationCallPipeline,
+                callPipeline: ApplicationCallPipeline,
                 configure: Configuration.() -> Unit
             ): KtorFeature<Configuration> {
                 configuration.configure()
 
                 this.apply(body)
 
-                interceptions.forEach {
-                    it.action(pipeline)
+                callInterceptions.forEach {
+                    it.action(callPipeline)
+                }
+
+                receiveInterceptions.forEach {
+                    it.action(callPipeline.receivePipeline)
+                }
+
+                sendInterceptions.forEach {
+                    it.action(callPipeline.sendPipeline)
                 }
 
                 return this
