@@ -6,6 +6,7 @@ package io.ktor.gson
 
 import com.google.gson.*
 import io.ktor.application.*
+import io.ktor.application.newapi.*
 import io.ktor.features.*
 import io.ktor.features.ContentTransformationException
 import io.ktor.http.*
@@ -31,7 +32,7 @@ public class GsonConverter(private val gson: Gson = Gson()) : ContentConverter {
         return TextContent(gson.toJson(value), contentType.withCharset(context.call.suitableCharset()))
     }
 
-    override suspend fun convertForReceive(context: PipelineContext<ApplicationReceiveRequest, ApplicationCall>): Any? {
+    override suspend fun convertForReceive(context: ReceiveExecution): Any? {
         val request = context.subject
         val channel = request.value as? ByteReadChannel ?: return null
         val type = request.typeInfo
@@ -51,7 +52,7 @@ public class GsonConverter(private val gson: Gson = Gson()) : ContentConverter {
 /**
  * Register GSON to [ContentNegotiation] feature
  */
-public fun ContentNegotiation.Configuration.gson(
+public fun ContentNegotiationConfig.gson(
     contentType: ContentType = ContentType.Application.Json,
     block: GsonBuilder.() -> Unit = {}
 ) {

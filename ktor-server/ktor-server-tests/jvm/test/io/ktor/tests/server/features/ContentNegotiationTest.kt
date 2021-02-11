@@ -5,14 +5,15 @@
 package io.ktor.tests.server.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
+import io.ktor.http.content.*
 import io.ktor.features.*
 import io.ktor.http.*
-import io.ktor.http.content.*
+import io.ktor.util.pipeline.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.testing.*
-import io.ktor.util.pipeline.*
 import io.ktor.utils.io.*
 import java.io.*
 import kotlin.test.*
@@ -30,9 +31,7 @@ class ContentNegotiationTest {
             return TextContent("[${value.value}]", contentType.withCharset(context.call.suitableCharset()))
         }
 
-        override suspend fun convertForReceive(
-            context: PipelineContext<ApplicationReceiveRequest, ApplicationCall>
-        ): Any? {
+        override suspend fun convertForReceive(context: ReceiveExecution): Any? {
             val type = context.subject.type
             val channel = context.subject.value
             if (type != Wrapper::class || channel !is ByteReadChannel) return null
@@ -50,9 +49,7 @@ class ContentNegotiationTest {
             return TextContent(value.value, contentType.withCharset(context.call.suitableCharset()))
         }
 
-        override suspend fun convertForReceive(
-            context: PipelineContext<ApplicationReceiveRequest, ApplicationCall>
-        ): Any? {
+        override suspend fun convertForReceive(context: ReceiveExecution): Any? {
             val type = context.subject.type
             val incoming = context.subject.value
             if (type != Wrapper::class || incoming !is ByteReadChannel) return null
@@ -69,9 +66,7 @@ class ContentNegotiationTest {
             fail("This converter should be never started for send")
         }
 
-        override suspend fun convertForReceive(
-            context: PipelineContext<ApplicationReceiveRequest, ApplicationCall>
-        ): Any? {
+        override suspend fun convertForReceive(context: ReceiveExecution): Any? {
             fail("This converter should be never started for receive")
         }
     }
@@ -91,7 +86,9 @@ class ContentNegotiationTest {
             }
         }
 
-        handleRequest(HttpMethod.Get, "/") { }.let { call ->
+        handleRequest(HttpMethod.Get, "/") {
+
+        }.let { call ->
             assertEquals(HttpStatusCode.OK, call.response.status())
             assertEquals(ContentType.Text.Plain, call.response.contentType().withoutParameters())
             assertEquals("OK", call.response.content)
@@ -362,32 +359,18 @@ class ContentNegotiationTest {
         handleRequest(HttpMethod.Post, "/parameters") {
             setBody("k=v")
             addHeader(
-                HttpHeaders.ContentType,
-                ContentType.Application.FormUrlEncoded.toString()
+                HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString()
             )
         }.let { call ->
             assertEquals("Parameters [k=[v]]", call.response.content)
         }
 
         handleRequest(HttpMethod.Post, "/multipart") {
-            setBody(
-                "my-boundary",
-                listOf(
-                    PartData.FormItem(
-                        "test",
-                        {},
-                        headersOf(
-                            HttpHeaders.ContentDisposition,
-                            ContentDisposition(
-                                "form-data",
-                                listOf(
-                                    HeaderValueParam("name", "field1")
-                                )
-                            ).toString()
-                        )
-                    )
-                )
-            )
+            setBody("my-boundary", listOf(PartData.FormItem("test", {}, headersOf(
+                HttpHeaders.ContentDisposition, ContentDisposition("form-data", listOf(
+                    HeaderValueParam("name", "field1")
+                )).toString()
+            ))))
             addHeader(
                 HttpHeaders.ContentType,
                 ContentType.MultiPart.FormData.withParameter("boundary", "my-boundary").toString()

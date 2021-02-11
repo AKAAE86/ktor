@@ -4,7 +4,7 @@
 
 package io.ktor.application.newapi
 
-public class FeatureNotInstalledException(private val ktorFeature: KtorFeature<out Any>): Exception() {
+public class FeatureNotInstalledException(private val featureName: String): Exception() {
     override val message: String?
-        get() = "Feature ${ktorFeature.name} is not installed but required"
+        get() = "Feature $featureName is not installed but required"
 }

@@ -5,6 +5,8 @@
 package io.ktor.auth
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
+import io.ktor.application.newapi.KtorFeature.Companion.makeFeature
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
@@ -147,7 +149,8 @@ public class Authentication(config: Configuration) {
     /**
      * Installable feature for [Authentication].
      */
-    public companion object Feature : ApplicationFeature<Application, Configuration, Authentication> {
+    public companion object Feature : ApplicationFeature<Application, Configuration, Authentication>,
+        InterceptionsHolder {
         /**
          * Authenticate phase in that authentication procedures are executed.
          * Please note that referring to the phase is only possible *after* feature installation.
@@ -167,6 +170,14 @@ public class Authentication(config: Configuration) {
                 configure(configure)
             }
         }
+
+        override val callInterceptions: MutableList<CallInterception>
+            get() = TODO("Not yet implemented")
+        override val receiveInterceptions: MutableList<ReceiveInterception>
+            get() = TODO("Not yet implemented")
+        override val sendInterceptions: MutableList<SendInterception>
+            get() = TODO("Not yet implemented")
+
     }
 
     private fun forEveryProvider(authenticationPipeline: AuthenticationPipeline) {
@@ -343,3 +354,5 @@ public class AuthenticationRouteSelector(public val names: List<String?>) :
 public fun Application.authentication(block: Authentication.Configuration.() -> Unit) {
     featureOrNull(Authentication)?.configure(block) ?: install(Authentication, block)
 }
+
+
