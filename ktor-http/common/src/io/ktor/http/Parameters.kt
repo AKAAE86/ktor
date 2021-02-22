@@ -10,13 +10,6 @@ import io.ktor.util.*
  * Represents HTTP parameters as a map from case-insensitive names to collection of [String] values
  */
 public interface Parameters : StringValues {
-    /**
-     * Returns a [UrlEncodingOption] instance
-     */
-    @KtorExperimentalAPI
-    public val urlEncodingOption: UrlEncodingOption
-        get() = UrlEncodingOption.DEFAULT
-
     public companion object {
         /**
          * Empty [Parameters] instance
@@ -34,18 +27,19 @@ public interface Parameters : StringValues {
 }
 
 @Suppress("KDocMissingDocumentation")
-public class ParametersBuilder(
-    size: Int = 8,
-    public var urlEncodingOption: UrlEncodingOption = UrlEncodingOption.DEFAULT
-) : StringValuesBuilder(true, size) {
+public interface ParametersBuilder : StringValuesBuilder {
+    override fun build(): Parameters
+}
 
-    @Deprecated("Binary compatibility", level = DeprecationLevel.HIDDEN)
-    public constructor(size: Int = 8) : this(size, UrlEncodingOption.DEFAULT)
+@Suppress("KDocMissingDocumentation")
+public fun ParametersBuilder(size: Int = 8): ParametersBuilder = ParametersBuilderImpl(size)
 
+@Suppress("KDocMissingDocumentation")
+public class ParametersBuilderImpl(size: Int = 8) : StringValuesBuilderImpl(true, size), ParametersBuilder {
     override fun build(): Parameters {
         require(!built) { "ParametersBuilder can only build a single Parameters instance" }
         built = true
-        return ParametersImpl(values, urlEncodingOption)
+        return ParametersImpl(values)
     }
 }
 
@@ -88,14 +82,8 @@ public fun parametersOf(vararg pairs: Pair<String, List<String>>): Parameters = 
 
 @Suppress("KDocMissingDocumentation")
 @InternalAPI
-public class ParametersImpl(
-    values: Map<String, List<String>> = emptyMap(),
-    override val urlEncodingOption: UrlEncodingOption = UrlEncodingOption.DEFAULT
-) : Parameters, StringValuesImpl(true, values) {
-
-    @Deprecated("Binary compatibility", level = DeprecationLevel.HIDDEN)
-    public constructor(values: Map<String, List<String>> = emptyMap()) : this(values, UrlEncodingOption.DEFAULT)
-
+public class ParametersImpl(values: Map<String, List<String>> = emptyMap()) : Parameters,
+    StringValuesImpl(true, values) {
     override fun toString(): String = "Parameters ${entries()}"
 }
 
