@@ -58,3 +58,15 @@ public fun Headers.suitableCharset(defaultCharset: Charset = Charsets.UTF_8): Ch
     }
     return defaultCharset
 }
+
+/**
+ * Configuration for client and server `ContentNegotiation` feature
+ */
+public interface Configuration {
+    
+    public fun <T : ContentConverter> register(
+        contentType: ContentType,
+        converter: T,
+        configuration: T.() -> Unit = {}
+    )
+}

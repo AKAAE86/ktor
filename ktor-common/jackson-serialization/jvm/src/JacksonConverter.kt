@@ -4,6 +4,7 @@
 
 package io.ktor.common.jackson
 
+import com.fasterxml.jackson.core.util.*
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.module.kotlin.*
 import io.ktor.common.serialization.*
@@ -47,4 +48,26 @@ public class JacksonConverter(private val objectmapper: ObjectMapper = jacksonOb
             objectmapper.readValue(reader, type.jvmErasure.javaObjectType)
         }
     }
+}
+
+/**
+ * Register Jackson converter into [ContentNegotiation] feature
+ */
+public fun Configuration.jackson(
+    contentType: ContentType = ContentType.Application.Json,
+    block: ObjectMapper.() -> Unit = {}
+) {
+    val mapper = ObjectMapper()
+    mapper.apply {
+        setDefaultPrettyPrinter(
+            DefaultPrettyPrinter().apply {
+                indentArraysWith(DefaultPrettyPrinter.FixedSpaceIndenter.instance)
+                indentObjectsWith(DefaultIndenter("  ", "\n"))
+            }
+        )
+    }
+    mapper.apply(block)
+    mapper.registerKotlinModule()
+    val converter = JacksonConverter(mapper)
+    register(contentType, converter)
 }

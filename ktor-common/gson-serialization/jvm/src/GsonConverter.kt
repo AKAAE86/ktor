@@ -58,3 +58,17 @@ internal class ExcludedTypeGsonException(
         it.initCause(this)
     }
 }
+
+
+/**
+ * Register Gson to [ContentNegotiation] feature
+ */
+public fun Configuration.gson(
+    contentType: ContentType = ContentType.Application.Json,
+    block: GsonBuilder.() -> Unit = {}
+) {
+    val builder = GsonBuilder()
+    builder.apply(block)
+    val converter = GsonConverter(builder.create())
+    register(contentType, converter)
+}
