@@ -5,6 +5,7 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.common.serialization.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.request.*
@@ -13,7 +14,6 @@ import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
-import kotlin.text.Charsets
 
 /**
  * Functional type for accepted content types contributor
@@ -86,7 +86,7 @@ public class ContentNegotiation internal constructor(
     /**
      * Configuration type for [ContentNegotiation] feature
      */
-    public class Configuration {
+    public class Configuration: io.ktor.common.serialization.Configuration {
         internal val registrations = mutableListOf<ConverterRegistration>()
         internal val acceptContributors = mutableListOf<AcceptHeaderContributor>()
 
@@ -98,10 +98,10 @@ public class ContentNegotiation internal constructor(
         /**
          * Registers a [contentType] to a specified [converter] with an optional [configuration] script for converter
          */
-        public fun <T : ContentConverter> register(
+        public override fun <T : ContentConverter> register(
             contentType: ContentType,
             converter: T,
-            configuration: T.() -> Unit = {}
+            configuration: T.() -> Unit
         ) {
             val registration = ConverterRegistration(contentType, converter.apply(configuration))
             registrations.add(registration)
@@ -189,7 +189,12 @@ public class ContentNegotiation internal constructor(
 
                 // Pick the first one that can convert the subject successfully
                 val converted = suitableConverters.mapFirstNotNull {
-                    it.converter.convertForSend(this, it.contentType, subject)
+                    it.converter.serialize(
+                        contentType = it.contentType,
+                        charset = call.request.headers.suitableCharset(),
+                        type = call.response.responseType,
+                        value = subject
+                    )
                 }
 
                 val rendered = converted?.let { transformDefaultContent(it) }
@@ -221,50 +226,17 @@ public class ContentNegotiation internal constructor(
                     feature.registrations.firstOrNull { converter -> requestContentType.match(converter.contentType) }
                         ?: throw UnsupportedMediaTypeException(requestContentType)
 
-                val converted = suitableConverter.converter.convertForReceive(this)
-                    ?: throw UnsupportedMediaTypeException(requestContentType)
+                val converted = suitableConverter.converter.deserialize(
+                    charset = call.request.contentCharset() ?: Charsets.UTF_8,
+                    type = subject.typeInfo,
+                    content = subject.value as ByteReadChannel
+                ) ?: throw UnsupportedMediaTypeException(requestContentType)
 
                 proceedWith(ApplicationReceiveRequest(receive.typeInfo, converted, reusableValue = true))
             }
             return feature
         }
     }
-}
-
-/**
- * A custom content converted that could be registered in [ContentNegotiation] feature for any particular content type
- * Could provide bi-directional conversion implementation.
- * One of the most typical examples of content converter is a
- * json content converter that provides both serialization and deserialization
- */
-public interface ContentConverter {
-    /**
-     * Convert a [value] to the specified [contentType] to a value suitable for sending (serialize).
-     * Note that as far as [ContentConverter] could be registered multiple times with different content types
-     * hence [contentType] could be different depends on what the client accepts (inferred from Accept header).
-     * This function could ignore value if it is not suitable for conversion and return `null` so in this case
-     * other registered converters could be tried or this function could be invoked with other content types
-     * it the converted has been registered multiple times with different content types
-     *
-     * @param context pipeline context
-     * @param contentType to which this data converted has been registered and that matches client's accept header
-     * @param value to be converted
-     *
-     * @return a converted value (possibly an [OutgoingContent]), or null if [value] isn't suitable for this converter
-     */
-    public suspend fun convertForSend(
-        context: PipelineContext<Any, ApplicationCall>,
-        contentType: ContentType,
-        value: Any
-    ): Any?
-
-    /**
-     * Convert a value (RAW or intermediate) from receive pipeline (deserialize).
-     * Pipeline [PipelineContext.subject] has [ApplicationReceiveRequest.value] of type [ByteReadChannel]
-     *
-     * @return a converted value (deserialized) or `null` if the context's subject is not suitable for this converter
-     */
-    public suspend fun convertForReceive(context: PipelineContext<ApplicationReceiveRequest, ApplicationCall>): Any?
 }
 
 /**

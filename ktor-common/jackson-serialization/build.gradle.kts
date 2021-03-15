@@ -12,5 +12,10 @@ kotlin {
                 api("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_kotlin_version")
             }
         }
+        jvmTest {
+            dependencies {
+                api(project(":ktor-server:ktor-server-test-host"))
+            }
+        }
     }
 }
