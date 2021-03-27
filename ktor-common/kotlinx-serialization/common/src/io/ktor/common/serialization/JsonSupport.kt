@@ -11,7 +11,7 @@ import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.*
 
 /**
- * The default json configuration used in [SerializationConverter]. The settings are:
+ * The default json configuration used in [KotlinxSerializationConverter]. The settings are:
  * - defaults are serialized
  * - mode is not strict so extra json fields are ignored
  * - pretty printing is disabled
@@ -55,7 +55,7 @@ public fun Configuration.serialization(
 ) {
     register(
         contentType,
-        SerializationConverter(format)
+        KotlinxSerializationConverter(format)
     )
 }
 
@@ -70,6 +70,6 @@ public fun Configuration.serialization(
 ) {
     register(
         contentType,
-        SerializationConverter(format)
+        KotlinxSerializationConverter(format)
     )
 }

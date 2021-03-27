@@ -4,19 +4,21 @@
 
 package io.ktor.common.serialization
 
+import io.ktor.util.reflect.*
 import kotlinx.serialization.*
 import kotlinx.serialization.builtins.*
 import kotlinx.serialization.json.*
 import kotlinx.serialization.modules.*
 import kotlin.reflect.*
-import kotlin.reflect.full.*
 
-internal fun serializerFromResponseType(
-    type: KType?,
+@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+internal fun serializerFromTypeInfo(
+    typeInfo: TypeInfo,
     module: SerializersModule
 ): KSerializer<*>? {
-    val responseType = type ?: return null
-    return module.serializerOrNull(responseType)
+    return module.getContextual(typeInfo.type)
+        ?: typeInfo.kotlinType?.let { module.serializerOrNull(it) }
+        ?: typeInfo.type.serializer()
 }
 
 @Suppress("UNCHECKED_CAST")

@@ -2,13 +2,14 @@
  * Copyright 2014-2020 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package io.ktor.gson
+package io.ktor.common.serializaion.gson
 
 import com.google.gson.*
 import io.ktor.common.serialization.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.util.pipeline.*
+import io.ktor.util.reflect.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.jvm.javaio.*
@@ -25,22 +26,20 @@ public class GsonConverter(private val gson: Gson = Gson()) : ContentConverter {
     override suspend fun serialize(
         contentType: ContentType,
         charset: Charset,
-        type: KType?,
+        typeInfo: TypeInfo,
         value: Any
     ): OutgoingContent? {
         return TextContent(gson.toJson(value), contentType.withCharset(charset))
     }
 
-    override suspend fun deserialize(charset: Charset, type: KType, content: ByteReadChannel): Any? {
-        val javaType = type.jvmErasure
-
-        if (gson.isExcluded(javaType)) {
-            throw ExcludedTypeGsonException(javaType)
+    override suspend fun deserialize(charset: Charset, typeInfo: TypeInfo, content: ByteReadChannel): Any? {
+        if (gson.isExcluded(typeInfo.type)) {
+            throw ExcludedTypeGsonException(typeInfo.type)
         }
 
         return withContext(Dispatchers.IO) {
             val reader = content.toInputStream().reader(charset)
-            gson.fromJson(reader, type.javaType)
+            gson.fromJson(reader, typeInfo.reifiedType)
         }
     }
 }
@@ -58,7 +57,6 @@ internal class ExcludedTypeGsonException(
         it.initCause(this)
     }
 }
-
 
 /**
  * Register Gson to [ContentNegotiation] feature

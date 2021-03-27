@@ -2,13 +2,11 @@
  * Copyright 2014-2020 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package io.ktor.tests.gson
-
 import io.ktor.application.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.common.serializaion.gson.*
 import io.ktor.features.*
-import io.ktor.gson.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*

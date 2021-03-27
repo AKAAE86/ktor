@@ -49,7 +49,6 @@ kotlin.sourceSets {
         dependencies {
             api(project(":ktor-client:ktor-client-mock"))
             api(project(":ktor-test-dispatcher"))
-            api(project(":ktor-client:ktor-client-features:ktor-client-json:ktor-client-serialization"))
         }
     }
     commonTest {
@@ -57,6 +56,8 @@ kotlin.sourceSets {
             api(project(":ktor-client:ktor-client-features:ktor-client-logging"))
             api(project(":ktor-client:ktor-client-features:ktor-client-auth"))
             api(project(":ktor-client:ktor-client-features:ktor-client-encoding"))
+            api(project(":ktor-client:ktor-client-features:ktor-client-content-negotiation"))
+            api(project(":ktor-common:kotlinx-serialization"))
         }
     }
     jvmMain {
@@ -67,7 +68,7 @@ kotlin.sourceSets {
             api(project(":ktor-server:ktor-server-jetty"))
             api(project(":ktor-features:ktor-auth"))
             api(project(":ktor-features:ktor-websockets"))
-            api(project(":ktor-features:ktor-serialization"))
+            api(project(":ktor-common:kotlinx-serialization"))
             api("ch.qos.logback:logback-classic:$logback_version")
             api("junit:junit:$junit_version")
             api("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

@@ -2,7 +2,7 @@
  * Copyright 2014-2021 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package io.ktor.common.jackson
+package io.ktor.common.serializaion.jackson
 
 import com.fasterxml.jackson.core.util.*
 import com.fasterxml.jackson.databind.*
@@ -10,6 +10,7 @@ import com.fasterxml.jackson.module.kotlin.*
 import io.ktor.common.serialization.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.util.reflect.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.jvm.javaio.*
@@ -23,7 +24,7 @@ public class JacksonConverter(private val objectmapper: ObjectMapper = jacksonOb
     override suspend fun serialize(
         contentType: ContentType,
         charset: Charset,
-        type: KType?,
+        typeInfo: TypeInfo,
         value: Any
     ): OutgoingContent {
         return OutputStreamContent(
@@ -42,10 +43,10 @@ public class JacksonConverter(private val objectmapper: ObjectMapper = jacksonOb
         )
     }
 
-    override suspend fun deserialize(charset: Charset, type: KType, content: ByteReadChannel): Any? {
+    override suspend fun deserialize(charset: Charset, typeInfo: TypeInfo, content: ByteReadChannel): Any? {
         return withContext(Dispatchers.IO) {
             val reader = content.toInputStream().reader(charset)
-            objectmapper.readValue(reader, type.jvmErasure.javaObjectType)
+            objectmapper.readValue(reader, objectmapper.constructType(typeInfo.reifiedType))
         }
     }
 }

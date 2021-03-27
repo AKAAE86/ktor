@@ -46,16 +46,10 @@ public data class ContentTypeWithQuality(val contentType: ContentType, val quali
  * @param registrations is a list of registered converters for ContentTypes
  */
 public class ContentNegotiation internal constructor(
-    public val registrations: List<ConverterRegistration>,
-    private val acceptContributors: List<AcceptHeaderContributor>,
+    internal val registrations: List<ConverterRegistration>,
+    internal val acceptContributors: List<AcceptHeaderContributor>,
     private val checkAcceptHeaderCompliance: Boolean = false
 ) {
-
-    @Deprecated("This will become internal", level = DeprecationLevel.HIDDEN)
-    public constructor(
-        registrations: List<ConverterRegistration>,
-        acceptContributors: List<AcceptHeaderContributor>
-    ) : this(registrations, acceptContributors, false)
 
     internal fun checkAcceptHeader(
         acceptItems: List<ContentTypeWithQuality>,
@@ -78,15 +72,12 @@ public class ContentNegotiation internal constructor(
      * @param contentType is an instance of [ContentType] for this registration
      * @param converter is an instance of [ContentConverter] for this registration
      */
-    public data class ConverterRegistration(
-        val contentType: ContentType,
-        val converter: ContentConverter
-    )
+    internal class ConverterRegistration(val contentType: ContentType, val converter: ContentConverter)
 
     /**
      * Configuration type for [ContentNegotiation] feature
      */
-    public class Configuration: io.ktor.common.serialization.Configuration {
+    public class Configuration : io.ktor.common.serialization.Configuration {
         internal val registrations = mutableListOf<ConverterRegistration>()
         internal val acceptContributors = mutableListOf<AcceptHeaderContributor>()
 
@@ -192,7 +183,7 @@ public class ContentNegotiation internal constructor(
                     it.converter.serialize(
                         contentType = it.contentType,
                         charset = call.request.headers.suitableCharset(),
-                        type = call.response.responseType,
+                        typeInfo = call.response.responseType!!,
                         value = subject
                     )
                 }
@@ -212,7 +203,7 @@ public class ContentNegotiation internal constructor(
                 // skip if already transformed
                 if (subject.value !is ByteReadChannel) return@intercept
                 // skip if a byte channel has been requested so there is nothing to negotiate
-                if (subject.type == ByteReadChannel::class) return@intercept
+                if (subject.typeInfo.type == ByteReadChannel::class) return@intercept
 
                 val requestContentType = try {
                     call.request.contentType().withoutParameters()
@@ -228,7 +219,7 @@ public class ContentNegotiation internal constructor(
 
                 val converted = suitableConverter.converter.deserialize(
                     charset = call.request.contentCharset() ?: Charsets.UTF_8,
-                    type = subject.typeInfo,
+                    typeInfo = subject.typeInfo,
                     content = subject.value as ByteReadChannel
                 ) ?: throw UnsupportedMediaTypeException(requestContentType)
 

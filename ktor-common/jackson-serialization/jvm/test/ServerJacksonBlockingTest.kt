@@ -2,12 +2,10 @@
  * Copyright 2014-2020 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package io.ktor.tests.jackson
-
 import io.ktor.application.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
-import io.ktor.common.jackson.*
+import io.ktor.common.serializaion.jackson.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*

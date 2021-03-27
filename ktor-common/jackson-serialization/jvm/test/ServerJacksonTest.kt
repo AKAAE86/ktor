@@ -2,12 +2,10 @@
  * Copyright 2014-2019 JetBrains s.r.o and contributors. Use of this source code is governed by the Apache 2.0 license.
  */
 
-package io.ktor.tests.jackson
-
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.module.kotlin.*
 import io.ktor.application.*
-import io.ktor.common.jackson.*
+import io.ktor.common.serializaion.jackson.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*

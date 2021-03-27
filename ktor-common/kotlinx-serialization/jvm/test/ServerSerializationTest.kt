@@ -8,14 +8,13 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.serialization.*
+import io.ktor.common.serialization.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
-import kotlin.reflect.*
 import kotlin.test.*
 
-class SerializationTest {
+class ServerSerializationTest {
 
     @Test
     @Ignore
@@ -23,7 +22,7 @@ class SerializationTest {
         val uc = "\u0422"
 
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
         application.routing {
             val model = mapOf("id" to 1, "title" to "Hello, World!", "unicode" to uc)
@@ -63,7 +62,7 @@ class SerializationTest {
     @Test
     fun testEntityListReceive(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
         application.routing {
             post("/") {
@@ -88,7 +87,7 @@ class SerializationTest {
     @Test
     fun testEntityListSend(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
         application.routing {
             get("/") {
@@ -108,7 +107,7 @@ class SerializationTest {
     @Test
     fun testEntityArrayReceive(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
         application.routing {
             post("/") {
@@ -133,7 +132,7 @@ class SerializationTest {
     @Test
     fun testEntityArraySend(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
         application.routing {
             get("/") {
@@ -153,7 +152,7 @@ class SerializationTest {
     @Test
     fun testEntitySetReceive(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
         application.routing {
             post("/") {
@@ -178,7 +177,7 @@ class SerializationTest {
     @Test
     fun testEntitySetSend(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
         application.routing {
             get("/") {
@@ -198,7 +197,7 @@ class SerializationTest {
     @Test
     fun testEntityMapReceive(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
         application.routing {
             post("/") {
@@ -223,7 +222,7 @@ class SerializationTest {
     @Test
     fun testEntityMapSend(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
         application.routing {
             get("/") {
@@ -244,7 +243,7 @@ class SerializationTest {
     fun testEntity(): Unit = withTestApplication {
         val uc = "\u0422"
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter())
+            json()
         }
 
         application.routing {
@@ -311,7 +310,7 @@ class SerializationTest {
     fun testOnTextAny(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
             json()
-            register(contentType = ContentType.Text.Any, converter = SerializationConverter())
+            register(contentType = ContentType.Text.Any, converter = KotlinxSerializationConverter())
         }
 
         application.routing {
@@ -345,7 +344,7 @@ class SerializationTest {
     fun testReceiveNullValue(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
             json()
-            register(contentType = ContentType.Text.Any, converter = SerializationConverter())
+            register(contentType = ContentType.Text.Any, converter = KotlinxSerializationConverter())
         }
 
         application.routing {
@@ -440,7 +439,7 @@ class SerializationTest {
     @Test
     fun testRespondPolymorphic(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter(Json))
+            json()
         }
         application.routing {
             get("/sealed") {
@@ -453,8 +452,8 @@ class SerializationTest {
         }.let { call ->
             assertEquals(HttpStatusCode.OK, call.response.status())
             assertEquals(
-                """[{"type":"io.ktor.tests.serialization.TestSealed.A","valueA":"valueA"},""" +
-                    """{"type":"io.ktor.tests.serialization.TestSealed.B","valueB":"valueB"}]""",
+                """[{"type":"TestSealed.A","valueA":"valueA"},""" +
+                    """{"type":"TestSealed.B","valueB":"valueB"}]""",
                 call.response.content
             )
         }
@@ -463,7 +462,7 @@ class SerializationTest {
     @Test
     fun testRespondAny(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter(Json))
+            json()
         }
         application.routing {
             get("/") {
@@ -486,7 +485,7 @@ class SerializationTest {
     fun testRespondDifferentRuntimeTypes(): Unit = withTestApplication {
         var counter = 0
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter(Json))
+            json()
         }
         application.routing {
             get("/") {
@@ -551,7 +550,7 @@ class SerializationTest {
     @Test
     fun testRespondCollection(): Unit = withTestApplication {
         application.install(ContentNegotiation) {
-            register(ContentType.Application.Json, SerializationConverter(Json))
+            json()
         }
         application.routing {
             get("/") {
@@ -584,6 +583,3 @@ sealed class TestSealed {
     @Serializable
     data class B(val valueB: String) : TestSealed()
 }
-
-private fun SerializationConverter(): SerializationConverter =
-    SerializationConverter(DefaultJson)

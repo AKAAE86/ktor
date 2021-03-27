@@ -7,6 +7,7 @@ package io.ktor.common.serialization
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.util.pipeline.*
+import io.ktor.util.reflect.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import io.ktor.utils.io.core.*
@@ -27,7 +28,7 @@ public interface ContentConverter {
      * it the converted has been registered multiple times with different content types
      *
      * @param charset response charset
-     * @param type response body type
+     * @param typeInfo response body typeInfo
      * @param contentType to which this data converted has been registered and that matches client's accept header
      * @param value to be converted
      *
@@ -36,16 +37,16 @@ public interface ContentConverter {
     public suspend fun serialize(
         contentType: ContentType,
         charset: Charset,
-        type: KType?,
+        typeInfo: TypeInfo,
         value: Any
     ): OutgoingContent?
 
     /**
-     * Deserializes [content] to the value of type [type]
+     * Deserializes [content] to the value of type [typeInfo]
      *
      * @return a converted value (deserialized) or `null` if the context's subject is not suitable for this converter
      */
-    public suspend fun deserialize(charset: Charset, type: KType, content: ByteReadChannel): Any?
+    public suspend fun deserialize(charset: Charset, typeInfo: TypeInfo, content: ByteReadChannel): Any?
 }
 
 /**
@@ -63,7 +64,7 @@ public fun Headers.suitableCharset(defaultCharset: Charset = Charsets.UTF_8): Ch
  * Configuration for client and server `ContentNegotiation` feature
  */
 public interface Configuration {
-    
+
     public fun <T : ContentConverter> register(
         contentType: ContentType,
         converter: T,
