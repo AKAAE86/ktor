@@ -42,8 +42,6 @@ public data class ContentTypeWithQuality(val contentType: ContentType, val quali
  *
  * * https://tools.ietf.org/html/rfc7231#section-5.3
  * * https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation
- *
- * @param registrations is a list of registered converters for ContentTypes
  */
 public class ContentNegotiation internal constructor(
     internal val registrations: List<ConverterRegistration>,

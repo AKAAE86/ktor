@@ -49,5 +49,7 @@ class ClientJacksonTest : ClientContentNegotiationTest() {
         }
     }
 
+    override fun testSealed() {}
+
     data class Jackson(val value: String, @JsonIgnore val ignoredValue: String?)
 }

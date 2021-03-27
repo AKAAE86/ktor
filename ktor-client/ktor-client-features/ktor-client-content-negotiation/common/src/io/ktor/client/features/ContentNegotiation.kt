@@ -16,19 +16,9 @@ import io.ktor.utils.io.charsets.*
 
 /**
  * [HttpClient] feature that serializes/de-serializes custom objects
- * to request and from response bodies using a [serializer].
- *
- * The default [serializer] is [GsonSerializer].
- *
- * The default [acceptContentTypes] is a list which contains [ContentType.Application.Json]
- *
- * Note: It will de-serialize the body response if the specified type is a public accessible class
- *       and the Content-Type is one of [acceptContentTypes] list (`application/json` by default).
- *
- * @property serializer that is used to serialize and deserialize request/response bodies
- * @property acceptContentTypes that are allowed when receiving content
+ * to request and from response bodies using a [ContentConverter]
+ * to Content-Type and Accept headers.
  */
-
 public class ContentNegotiation internal constructor(
     internal val registrations: List<Config.ConverterRegistration>
 ) {

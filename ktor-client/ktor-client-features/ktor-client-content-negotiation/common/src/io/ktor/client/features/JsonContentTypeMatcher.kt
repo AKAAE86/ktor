@@ -11,7 +11,7 @@ import io.ktor.http.*
  */
 public object JsonContentTypeMatcher : ContentTypeMatcher {
     override fun contains(contentType: ContentType): Boolean {
-        if (ContentType.Application.Json.match(contentType)) {
+        if (contentType.match(ContentType.Application.Json)) {
             return true
         }
 

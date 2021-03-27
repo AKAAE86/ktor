@@ -7,4 +7,6 @@ import io.ktor.common.serializaion.gson.*
 
 class ClientGsonTest : ClientContentNegotiationTest() {
     override val converter = GsonConverter()
+
+    override fun testSealed() {}
 }

@@ -10,8 +10,6 @@ public final class io/ktor/client/features/ContentNegotiation$Config : io/ktor/c
 	public fun <init> ()V
 	public final fun register (Lio/ktor/http/ContentType;Lio/ktor/common/serialization/ContentConverter;Lio/ktor/http/ContentTypeMatcher;Lkotlin/jvm/functions/Function1;)V
 	public fun register (Lio/ktor/http/ContentType;Lio/ktor/common/serialization/ContentConverter;Lkotlin/jvm/functions/Function1;)V
-	public final fun registerJson (Lio/ktor/http/ContentType;Lio/ktor/common/serialization/ContentConverter;Lio/ktor/http/ContentTypeMatcher;Lkotlin/jvm/functions/Function1;)V
-	public static synthetic fun registerJson$default (Lio/ktor/client/features/ContentNegotiation$Config;Lio/ktor/http/ContentType;Lio/ktor/common/serialization/ContentConverter;Lio/ktor/http/ContentTypeMatcher;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
 }
 
 public final class io/ktor/client/features/ContentNegotiation$Feature : io/ktor/client/features/HttpClientFeature {
@@ -27,7 +25,7 @@ public final class io/ktor/client/features/DefaultJvmKt {
 }
 
 public final class io/ktor/client/features/JsonContentTypeMatcher : io/ktor/http/ContentTypeMatcher {
-	public fun <init> ()V
+	public static final field INSTANCE Lio/ktor/client/features/JsonContentTypeMatcher;
 	public fun contains (Lio/ktor/http/ContentType;)Z
 }
 

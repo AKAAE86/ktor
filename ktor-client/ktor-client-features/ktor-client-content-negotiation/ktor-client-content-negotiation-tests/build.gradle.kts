@@ -8,6 +8,8 @@ plugins {
     id("kotlinx-serialization")
 }
 
+val jackson_version: String by project.extra
+
 kotlin.sourceSets.jvmMain {
     dependencies {
         api(kotlin("test"))
@@ -15,5 +17,6 @@ kotlin.sourceSets.jvmMain {
         api(project(":ktor-server:ktor-server-cio"))
         api(project(":ktor-client:ktor-client-cio"))
         api(project(":ktor-client:ktor-client-tests"))
+        api("com.fasterxml.jackson.core:jackson-annotations:$jackson_version")
     }
 }

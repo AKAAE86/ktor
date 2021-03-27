@@ -9,8 +9,22 @@ import io.ktor.test.dispatcher.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.charsets.*
 import kotlinx.coroutines.*
+import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import kotlin.test.*
+
+@Serializable
+internal data class User(val id: Long, val login: String)
+
+@Serializable
+internal data class Photo(val id: Long, val path: String)
+
+@Serializable
+data class GithubProfile(
+    val login: String,
+    val id: Int,
+    val name: String
+)
 
 class SerializationTest {
     private val testSerializer = KotlinxSerializationConverter(DefaultJson)

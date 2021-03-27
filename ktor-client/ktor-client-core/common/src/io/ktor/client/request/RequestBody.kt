@@ -18,12 +18,11 @@ public inline fun <reified T> HttpRequestBuilder.setBody(body: T) {
     when (body) {
         null -> {
             this.body = EmptyContent
+            this.bodyType = null
         }
-        is String,
-        is OutgoingContent,
-        is ByteArray,
-        is ByteReadChannel -> {
+        is OutgoingContent -> {
             this.body = body
+            this.bodyType = null
         }
         else -> {
             this.body = body

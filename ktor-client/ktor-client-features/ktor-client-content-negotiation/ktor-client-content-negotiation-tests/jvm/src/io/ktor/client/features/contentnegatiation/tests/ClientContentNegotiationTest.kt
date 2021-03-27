@@ -6,6 +6,7 @@
 
 package io.ktor.client.features.contentnegatiation.tests
 
+import com.fasterxml.jackson.annotation.*
 import io.ktor.application.*
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -45,6 +46,11 @@ public abstract class ClientContentNegotiationTest : TestWithKtor() {
     private val customContentType = ContentType.parse("application/x-json")
 
     protected open fun createRoutes(routing: Routing): Unit = with(routing) {
+        post("/echo") {
+            val received = call.receive<String>()
+            println(received)
+            call.respondText(received, call.request.contentType())
+        }
         post("/widget") {
             val received = call.receive<String>()
             assertEquals("""{"name":"Foo","value":1000,"tags":["a","b","c"]}""", received)
@@ -236,6 +242,48 @@ public abstract class ClientContentNegotiationTest : TestWithKtor() {
 
             assertEquals(payload, result)
         }
+    }
+
+    @Test
+    public fun testGeneric() = testWithEngine(CIO) {
+        configClient()
+
+        test { client ->
+            val result = client.post {
+                url(path = "/echo", port = serverPort)
+                contentType(ContentType.Application.Json)
+                setBody(Response(true, users))
+            }.body<Response<List<User>>>()
+
+            assertTrue(result.ok)
+            assertNotNull(result.result)
+            assertEquals(users, result.result)
+        }
+    }
+
+    @Test
+    public open fun testSealed() = testWithEngine(CIO) {
+        configClient()
+
+        test { client ->
+            val result = client.post {
+                url(path = "/echo", port = serverPort)
+                contentType(ContentType.Application.Json)
+                setBody(listOf(TestSealed.A("A"), TestSealed.B("B")))
+            }.body<List<TestSealed>>()
+
+            assertEquals(listOf(TestSealed.A("A"), TestSealed.B("B")), result)
+        }
+    }
+
+    @Serializable
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
+    sealed class TestSealed {
+        @Serializable
+        data class A(val valueA: String) : TestSealed()
+
+        @Serializable
+        data class B(val valueB: String) : TestSealed()
     }
 
     @Serializable
