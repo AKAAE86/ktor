@@ -4,7 +4,6 @@
 
 package io.ktor.common.serialization
 
-import io.ktor.common.serialization.*
 import io.ktor.http.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*

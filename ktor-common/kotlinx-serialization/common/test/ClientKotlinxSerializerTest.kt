@@ -10,10 +10,9 @@ import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.common.serialization.*
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.utils.io.core.*
-import kotlin.test.*
 import kotlinx.serialization.*
+import kotlin.test.*
 
 @Serializable
 internal data class User(val id: Long, val login: String)

@@ -4,7 +4,6 @@
 
 package io.ktor.common.serialization
 
-import io.ktor.common.serialization.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.util.pipeline.*
