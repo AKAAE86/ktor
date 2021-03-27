@@ -13,6 +13,7 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.testing.*
+import io.ktor.util.reflect.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 import java.io.*
@@ -27,15 +28,15 @@ class ContentNegotiationTest {
         override suspend fun serialize(
             contentType: ContentType,
             charset: Charset,
-            type: KType?,
+            typeInfo: TypeInfo,
             value: Any
         ): OutgoingContent? {
             if (value !is Wrapper) return null
             return TextContent("[${value.value}]", contentType.withCharset(charset))
         }
 
-        override suspend fun deserialize(charset: Charset, type: KType, content: ByteReadChannel): Any? {
-            if (type.classifier != Wrapper::class) return null
+        override suspend fun deserialize(charset: Charset, typeInfo: TypeInfo, content: ByteReadChannel): Any? {
+            if (typeInfo.type != Wrapper::class) return null
             return Wrapper(content.readRemaining().readText().removeSurrounding("[", "]"))
         }
     }
@@ -44,15 +45,15 @@ class ContentNegotiationTest {
         override suspend fun serialize(
             contentType: ContentType,
             charset: Charset,
-            type: KType?,
+            typeInfo: TypeInfo,
             value: Any
         ): OutgoingContent? {
             if (value !is Wrapper) return null
             return TextContent(value.value, contentType.withCharset(charset))
         }
 
-        override suspend fun deserialize(charset: Charset, type: KType, content: ByteReadChannel): Any? {
-            if (type.classifier != Wrapper::class) return null
+        override suspend fun deserialize(charset: Charset, typeInfo: TypeInfo, content: ByteReadChannel): Any? {
+            if (typeInfo.type != Wrapper::class) return null
             return Wrapper(content.readRemaining().readText())
         }
     }
@@ -61,13 +62,13 @@ class ContentNegotiationTest {
         override suspend fun serialize(
             contentType: ContentType,
             charset: Charset,
-            type: KType?,
+            typeInfo: TypeInfo,
             value: Any
         ): OutgoingContent? {
             fail("This converter should be never started for send")
         }
 
-        override suspend fun deserialize(charset: Charset, type: KType, content: ByteReadChannel): Any? {
+        override suspend fun deserialize(charset: Charset, typeInfo: TypeInfo, content: ByteReadChannel): Any? {
             fail("This converter should be never started for receive")
         }
     }

@@ -15,10 +15,6 @@ import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
 
-private fun defaultMatcher(pattern: ContentType): ContentTypeMatcher = object : ContentTypeMatcher {
-    override fun contains(contentType: ContentType): Boolean = contentType.match(pattern)
-}
-
 /**
  * [HttpClient] feature that serializes/de-serializes custom objects
  * to request and from response bodies using a [serializer].
@@ -46,7 +42,7 @@ public class ContentNegotiation internal constructor(
         internal class ConverterRegistration(
             val converter: ContentConverter,
             val contentTypeToSend: ContentType,
-            val contentTypeMatcher: ContentTypeMatcher = defaultMatcher(contentTypeToSend),
+            val contentTypeMatcher: ContentTypeMatcher,
         )
 
         internal val registrations = mutableListOf<ConverterRegistration>()
@@ -59,8 +55,11 @@ public class ContentNegotiation internal constructor(
             converter: T,
             configuration: T.() -> Unit
         ) {
-            val registration = ConverterRegistration(converter.apply(configuration), contentType)
-            registrations.add(registration)
+            val matcher = when (contentType) {
+                ContentType.Application.Json -> JsonContentTypeMatcher
+                else -> defaultMatcher(contentType)
+            }
+            register(contentType, converter, matcher, configuration)
         }
 
         /**
@@ -81,22 +80,8 @@ public class ContentNegotiation internal constructor(
             registrations.add(registration)
         }
 
-        /**
-         * Registers a [contentTypeToSend] and [contentTypeMatcher] to a specified [converter] with
-         * an optional [configuration] script for converter with defaults for json format
-         */
-        public fun <T : ContentConverter> registerJson(
-            contentTypeToSend: ContentType = ContentType.Application.Json,
-            converter: T,
-            contentTypeMatcher: ContentTypeMatcher = JsonContentTypeMatcher(),
-            configuration: T.() -> Unit = {}
-        ) {
-            val registration = ConverterRegistration(
-                converter.apply(configuration),
-                contentTypeToSend,
-                contentTypeMatcher
-            )
-            registrations.add(registration)
+        private fun defaultMatcher(pattern: ContentType): ContentTypeMatcher = object : ContentTypeMatcher {
+            override fun contains(contentType: ContentType): Boolean = contentType.match(pattern)
         }
     }
 

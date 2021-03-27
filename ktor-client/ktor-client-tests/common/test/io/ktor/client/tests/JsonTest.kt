@@ -9,6 +9,7 @@ import io.ktor.client.request.*
 import io.ktor.client.features.*
 import io.ktor.client.features.ContentNegotiation
 import io.ktor.client.tests.utils.*
+import io.ktor.common.serialization.*
 import io.ktor.http.*
 import kotlinx.serialization.*
 import kotlin.test.*
@@ -25,9 +26,7 @@ class JsonTest : ClientLoader() {
     @Test
     fun testUserGenerics() = clientTests(listOf("js")) {
         config {
-            install(ContentNegotiation) {
-                register(ContentType.Application.Json, KotlinxSerializationConverter())
-            }
+            install(ContentNegotiation) { json() }
         }
 
         test { client ->

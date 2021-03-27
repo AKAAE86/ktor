@@ -9,7 +9,7 @@ import io.ktor.http.*
 /**
  * Matcher that accepts all extended json content types
  */
-public class JsonContentTypeMatcher : ContentTypeMatcher {
+public object JsonContentTypeMatcher : ContentTypeMatcher {
     override fun contains(contentType: ContentType): Boolean {
         if (ContentType.Application.Json.match(contentType)) {
             return true
