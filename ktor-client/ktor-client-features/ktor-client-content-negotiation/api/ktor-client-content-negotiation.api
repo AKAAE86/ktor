@@ -20,10 +20,6 @@ public final class io/ktor/client/features/ContentNegotiation$Feature : io/ktor/
 	public synthetic fun prepare (Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
 }
 
-public final class io/ktor/client/features/DefaultJvmKt {
-	public static final fun defaultSerializer ()Lio/ktor/common/serialization/ContentConverter;
-}
-
 public final class io/ktor/client/features/JsonContentTypeMatcher : io/ktor/http/ContentTypeMatcher {
 	public static final field INSTANCE Lio/ktor/client/features/JsonContentTypeMatcher;
 	public fun contains (Lio/ktor/http/ContentType;)Z

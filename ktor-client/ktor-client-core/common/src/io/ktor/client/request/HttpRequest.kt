@@ -7,6 +7,7 @@ package io.ktor.client.request
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
+import io.ktor.client.features.*
 import io.ktor.client.utils.*
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -146,7 +147,7 @@ public class HttpRequestBuilder : HttpMessageBuilder {
         body = builder.body
         bodyType = builder.bodyType
         url.takeFrom(builder.url)
-        url.encodedPath = if (url.encodedPath.isBlank()) "/" else url.encodedPath
+        url.encodedPath = url.encodedPath.ifBlank { "/" }
         headers.appendAll(builder.headers)
         attributes.putAll(builder.attributes)
 

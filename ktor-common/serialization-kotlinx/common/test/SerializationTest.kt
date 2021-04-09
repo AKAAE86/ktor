@@ -3,12 +3,12 @@
  */
 
 import io.ktor.common.serialization.*
+import io.ktor.common.serialization.kotlinx.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.test.dispatcher.*
 import io.ktor.util.reflect.*
 import io.ktor.utils.io.charsets.*
-import kotlinx.coroutines.*
 import kotlinx.serialization.*
 import kotlinx.serialization.json.*
 import kotlin.test.*

@@ -57,7 +57,7 @@ kotlin.sourceSets {
             api(project(":ktor-client:ktor-client-features:ktor-client-auth"))
             api(project(":ktor-client:ktor-client-features:ktor-client-encoding"))
             api(project(":ktor-client:ktor-client-features:ktor-client-content-negotiation"))
-            api(project(":ktor-common:kotlinx-serialization"))
+            api(project(":ktor-common:serialization-kotlinx"))
         }
     }
     jvmMain {
@@ -68,7 +68,7 @@ kotlin.sourceSets {
             api(project(":ktor-server:ktor-server-jetty"))
             api(project(":ktor-features:ktor-auth"))
             api(project(":ktor-features:ktor-websockets"))
-            api(project(":ktor-common:kotlinx-serialization"))
+            api(project(":ktor-common:serialization-kotlinx"))
             api("ch.qos.logback:logback-classic:$logback_version")
             api("junit:junit:$junit_version")
             api("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

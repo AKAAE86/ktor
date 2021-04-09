@@ -3,7 +3,7 @@
  */
 
 import io.ktor.application.*
-import io.ktor.common.serialization.*
+import io.ktor.common.serialization.kotlinx.*
 import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*

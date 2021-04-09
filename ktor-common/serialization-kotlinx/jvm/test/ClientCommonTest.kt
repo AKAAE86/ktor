@@ -3,7 +3,7 @@
  */
 
 import io.ktor.client.features.contentnegatiation.tests.*
-import io.ktor.common.serialization.*
+import io.ktor.common.serialization.kotlinx.*
 
 class ClientCommonTest : ClientContentNegotiationTest() {
     override val converter = KotlinxSerializationConverter(DefaultJson)

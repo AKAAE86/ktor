@@ -8,7 +8,6 @@ import io.ktor.client.utils.*
 import io.ktor.http.content.*
 import io.ktor.util.*
 import io.ktor.util.reflect.*
-import io.ktor.utils.io.*
 import kotlin.native.concurrent.*
 
 @SharedImmutable

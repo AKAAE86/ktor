@@ -16,7 +16,7 @@ kotlin.sourceSets {
         dependencies {
             api("org.jetbrains.kotlinx:kotlinx-serialization-core:$serialization_version")
             api(project(":ktor-client:ktor-client-features:ktor-client-content-negotiation"))
-            api(project(":ktor-common:kotlinx-serialization"))
+            api(project(":ktor-common:serialization-kotlinx"))
         }
     }
 }

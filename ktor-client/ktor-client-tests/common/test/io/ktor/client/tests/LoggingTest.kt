@@ -12,11 +12,12 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.common.serialization.*
+import io.ktor.common.serialization.kotlinx.*
 import io.ktor.http.*
 import io.ktor.util.collections.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.*
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import kotlin.test.*
 
 class LoggingTest : ClientLoader() {

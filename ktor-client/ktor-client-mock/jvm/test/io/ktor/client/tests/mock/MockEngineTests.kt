@@ -9,9 +9,8 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.features.*
 import io.ktor.client.request.*
-import io.ktor.client.response.*
 import io.ktor.client.statement.*
-import io.ktor.common.serialization.*
+import io.ktor.common.serialization.kotlinx.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import kotlinx.coroutines.*
