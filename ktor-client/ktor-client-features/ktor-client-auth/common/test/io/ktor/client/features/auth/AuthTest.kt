@@ -9,6 +9,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.client.tests.utils.*
 import io.ktor.http.*
+import kotlinx.coroutines.*
 import kotlin.test.*
 
 class AuthTest : ClientLoader() {
@@ -144,8 +145,7 @@ class AuthTest : ClientLoader() {
     }
 
     @Test
-    // If loadTokensFun returns "invalid" tokens, than refreshTokenFun should refresh tokens and repeat the call
-    fun testUnauthorizedBearerAuthWithInvalidAccessTokenAndValidRefreshToken() = clientTests(listOf()) {
+    fun testUnauthorizedBearerAuthWithInvalidAccessTokenAndValidRefreshToken() = clientTests {
         config {
             install(Auth) {
                 bearer {
@@ -163,4 +163,40 @@ class AuthTest : ClientLoader() {
         }
     }
 
+    @Test
+    fun testRequestDuringTokenUpdate() = clientTests {
+        var counter = 0
+        val monitor = Job()
+        config {
+            install(Auth) {
+                bearer {
+                    refreshTokens {
+                        counter++
+                        assertEquals(1, counter)
+                        monitor.join()
+                        counter = 0
+                        BearerTokens("valid", counter.toString())
+                    }
+                }
+            }
+        }
+
+        test { client ->
+            val firstRequest = GlobalScope.async(Dispatchers.Unconfined) {
+                client.get<String>("$TEST_SERVER/auth/bearer/test-refresh")
+            }
+
+            val secondRequest = GlobalScope.async(Dispatchers.Unconfined) {
+                client.get<String>("$TEST_SERVER/auth/bearer/test-refresh")
+            }
+
+            assertTrue { !firstRequest.isCompleted }
+            assertTrue { !secondRequest.isCompleted }
+
+            monitor.complete()
+
+            assertEquals("", firstRequest.await())
+            assertEquals("", secondRequest.await())
+        }
+    }
 }

@@ -22,6 +22,11 @@ public abstract interface class io/ktor/client/features/auth/AuthProvider {
 	public abstract fun addRequestHeaders (Lio/ktor/client/request/HttpRequestBuilder;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getSendWithoutRequest ()Z
 	public abstract fun isApplicable (Lio/ktor/http/auth/HttpAuthHeader;)Z
+	public abstract fun refreshToken (Lio/ktor/client/call/HttpClientCall;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class io/ktor/client/features/auth/AuthProvider$DefaultImpls {
+	public static fun refreshToken (Lio/ktor/client/features/auth/AuthProvider;Lio/ktor/client/call/HttpClientCall;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/ktor/client/features/auth/providers/BasicAuthConfig {
@@ -44,6 +49,7 @@ public final class io/ktor/client/features/auth/providers/BasicAuthProvider : io
 	public fun addRequestHeaders (Lio/ktor/client/request/HttpRequestBuilder;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getSendWithoutRequest ()Z
 	public fun isApplicable (Lio/ktor/http/auth/HttpAuthHeader;)Z
+	public fun refreshToken (Lio/ktor/client/call/HttpClientCall;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/ktor/client/features/auth/providers/BasicAuthProviderKt {
@@ -62,11 +68,12 @@ public final class io/ktor/client/features/auth/providers/BearerAuthProvider : i
 	public fun <init> (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;ZLjava/lang/String;)V
 	public synthetic fun <init> (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun addRequestHeaders (Lio/ktor/client/request/HttpRequestBuilder;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun clearToken ()V
 	public final fun getLoadTokens ()Lkotlin/jvm/functions/Function1;
 	public final fun getRefreshTokens ()Lkotlin/jvm/functions/Function2;
 	public fun getSendWithoutRequest ()Z
 	public fun isApplicable (Lio/ktor/http/auth/HttpAuthHeader;)Z
-	public final fun refreshToken (Lio/ktor/client/call/HttpClientCall;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun refreshToken (Lio/ktor/client/call/HttpClientCall;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/ktor/client/features/auth/providers/BearerAuthProviderKt {
@@ -75,15 +82,8 @@ public final class io/ktor/client/features/auth/providers/BearerAuthProviderKt {
 
 public final class io/ktor/client/features/auth/providers/BearerTokens {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lio/ktor/client/features/auth/providers/BearerTokens;
-	public static synthetic fun copy$default (Lio/ktor/client/features/auth/providers/BearerTokens;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lio/ktor/client/features/auth/providers/BearerTokens;
-	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAccessToken ()Ljava/lang/String;
 	public final fun getRefreshToken ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class io/ktor/client/features/auth/providers/DigestAuthConfig {
@@ -108,6 +108,7 @@ public final class io/ktor/client/features/auth/providers/DigestAuthProvider : i
 	public fun getSendWithoutRequest ()Z
 	public final fun getUsername ()Ljava/lang/String;
 	public fun isApplicable (Lio/ktor/http/auth/HttpAuthHeader;)Z
+	public fun refreshToken (Lio/ktor/client/call/HttpClientCall;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class io/ktor/client/features/auth/providers/DigestAuthProviderKt {

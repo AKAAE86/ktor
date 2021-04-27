@@ -13,7 +13,7 @@ import kotlinx.atomicfu.*
 import kotlinx.coroutines.*
 
 /**
- * Add [BasicAuthProvider] to client [Auth] providers.
+ * Add [BearerAuthProvider] to client [Auth] providers.
  */
 public fun Auth.bearer(block: BearerAuthConfig.() -> Unit) {
     with(BearerAuthConfig().apply(block)) {
@@ -21,13 +21,13 @@ public fun Auth.bearer(block: BearerAuthConfig.() -> Unit) {
     }
 }
 
-public data class BearerTokens(
-    val accessToken: String,
-    val refreshToken: String
+public class BearerTokens(
+    public val accessToken: String,
+    public val refreshToken: String
 )
 
 /**
- * [DigestAuthProvider] configuration.
+ * [BearerAuthProvider] configuration.
  */
 public class BearerAuthConfig {
     internal var _refreshTokens: suspend (call: HttpClientCall) -> BearerTokens? = { null }
@@ -45,7 +45,7 @@ public class BearerAuthConfig {
 }
 
 /**
- * Client digest [AuthProvider].
+ * Client bearer [AuthProvider].
  */
 public class BearerAuthProvider(
     public val refreshTokens: suspend (call: HttpClientCall) -> BearerTokens?,
@@ -53,10 +53,11 @@ public class BearerAuthProvider(
     override val sendWithoutRequest: Boolean = true,
     private val realm: String?
 ) : AuthProvider {
-    private val cachedBearerTokens: AtomicRef<CompletableDeferred<BearerTokens?>> =
-        atomic(CompletableDeferred<BearerTokens?>().apply {
+    private val cachedBearerTokens: AtomicRef<CompletableDeferred<BearerTokens?>> = atomic(
+        CompletableDeferred<BearerTokens?>().apply {
             complete(null)
-        })
+        }
+    )
 
     /**
      * Check if current provider is applicable to the request.
