@@ -6,7 +6,6 @@ package io.ktor.auth
 
 import io.ktor.application.*
 import io.ktor.application.newapi.*
-import io.ktor.application.newapi.KtorFeature.Companion.makeFeature
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.util.*
@@ -150,7 +149,7 @@ public class Authentication(config: Configuration) {
      * Installable feature for [Authentication].
      */
     public companion object Feature : ApplicationFeature<Application, Configuration, Authentication>,
-        InterceptionsHolder {
+        InterceptionsHolder by DefaultInterceptionsHolder("Authentication") {
         /**
          * Authenticate phase in that authentication procedures are executed.
          * Please note that referring to the phase is only possible *after* feature installation.
@@ -163,6 +162,13 @@ public class Authentication(config: Configuration) {
          */
         public val ChallengePhase: PipelinePhase = PipelinePhase("Challenge")
 
+        init {
+            defineInterceptions {
+                call(AuthenticatePhase, ChallengePhase)
+                // TODO: maybe consider adding authentication pipeline to new API, and then add AuthenticationPipeline.RequestAuthentication
+            }
+        }
+
         override val key: AttributeKey<Authentication> = AttributeKey("Authentication")
 
         override fun install(pipeline: Application, configure: Configuration.() -> Unit): Authentication {
@@ -170,14 +176,6 @@ public class Authentication(config: Configuration) {
                 configure(configure)
             }
         }
-
-        override val callInterceptions: MutableList<CallInterception>
-            get() = TODO("Not yet implemented")
-        override val receiveInterceptions: MutableList<ReceiveInterception>
-            get() = TODO("Not yet implemented")
-        override val sendInterceptions: MutableList<SendInterception>
-            get() = TODO("Not yet implemented")
-
     }
 
     private fun forEveryProvider(authenticationPipeline: AuthenticationPipeline) {

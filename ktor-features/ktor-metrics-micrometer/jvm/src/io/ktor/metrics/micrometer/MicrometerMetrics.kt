@@ -5,6 +5,7 @@
 package io.ktor.metrics.micrometer
 
 import io.ktor.application.*
+import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*

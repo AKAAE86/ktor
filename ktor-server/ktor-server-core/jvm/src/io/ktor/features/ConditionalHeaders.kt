@@ -5,6 +5,8 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
+import io.ktor.http.content.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.response.*
@@ -78,8 +80,15 @@ public class ConditionalHeaders(private val versionProviders: List<suspend (Outg
     /**
      * `ApplicationFeature` implementation for [ConditionalHeaders]
      */
-    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, ConditionalHeaders> {
+    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, ConditionalHeaders>,
+        InterceptionsHolder by DefaultInterceptionsHolder("ConditionalHeaders") {
         override val key: AttributeKey<ConditionalHeaders> = AttributeKey<ConditionalHeaders>("Conditional Headers")
+
+        init {
+            Compression.defineInterceptions {
+                afterResponse()
+            }
+        }
 
         override fun install(
             pipeline: ApplicationCallPipeline,

@@ -6,11 +6,12 @@ package io.ktor.features
 
 import io.ktor.application.*
 import io.ktor.application.newapi.*
-import io.ktor.application.newapi.KtorFeature.Companion.makeFeature
+import io.ktor.application.newapi.KtorPlugin.Companion.createPlugin
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
+import io.ktor.routing.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import io.ktor.utils.io.*
@@ -19,7 +20,7 @@ import kotlin.text.Charsets
 
 /**
  * Functional type for accepted content types contributor
- * @see ContentNegotiation.Configuration.accept
+ * @see ContentNegotiationConfig.accept
  */
 @KtorExperimentalAPI
 public typealias AcceptHeaderContributor = (
@@ -170,7 +171,7 @@ public class ContentNegotiationConfig(public val pipeline: ApplicationCallPipeli
  *
  * @param registrations is a list of registered converters for ContentTypes
  */
-public val ContentNegotiation: KtorFeature<ContentNegotiationConfig> = makeFeature(
+public val ContentNegotiation: KtorPlugin<ContentNegotiationConfig> = createPlugin(
     name = "ContentNegotiation",
     createConfiguration = ::ContentNegotiationConfig
 ) {
@@ -183,7 +184,7 @@ public val ContentNegotiation: KtorFeature<ContentNegotiationConfig> = makeFeatu
         }
     }
 
-    feature.pipeline.sendPipeline.intercept(ApplicationSendPipeline.Render) { subject ->
+    plugin.pipeline.sendPipeline.intercept(ApplicationSendPipeline.Render) { subject ->
         if (subject is OutgoingContent) return@intercept
 
         val acceptHeaderContent = call.request.header(HttpHeaders.Accept)
@@ -197,17 +198,17 @@ public val ContentNegotiation: KtorFeature<ContentNegotiationConfig> = makeFeatu
             )
         }
 
-        val acceptItems = feature.acceptContributors.fold(acceptHeader) { acc, e ->
+        val acceptItems = plugin.acceptContributors.fold(acceptHeader) { acc, e ->
             e(call, acc)
         }.distinct().sortedByQuality()
 
         val suitableConverters = if (acceptItems.isEmpty()) {
             // all converters are suitable since client didn't indicate what it wants
-            feature.registrations
+            plugin.registrations
         } else {
             // select converters that match specified Accept header, in order of quality
             acceptItems.flatMap { (contentType, _) ->
-                feature.registrations.filter { it.contentType.match(contentType) }
+                plugin.registrations.filter { it.contentType.match(contentType) }
             }.distinct()
         }
 
@@ -236,7 +237,7 @@ public val ContentNegotiation: KtorFeature<ContentNegotiationConfig> = makeFeatu
             )
         }
         val suitableConverter =
-            feature.registrations.firstOrNull { converter -> requestContentType.match(converter.contentType) }
+            plugin.registrations.firstOrNull { converter -> requestContentType.match(converter.contentType) }
                 ?: throw UnsupportedMediaTypeException(requestContentType)
 
         val converted = suitableConverter.converter.convertForReceive(this)
@@ -244,4 +245,11 @@ public val ContentNegotiation: KtorFeature<ContentNegotiationConfig> = makeFeatu
 
         proceedWith(ApplicationReceiveRequest(subject.typeInfo, converted, reusableValue = true))
     }
+}
+
+public fun Application.contentNegotiation(configuration: ContentNegotiationConfig.() -> Unit): KtorPlugin<ContentNegotiationConfig> {
+    val a: KtorPlugin<ContentNegotiationConfig>? =
+        featureOrNull(ContentNegotiation)?.also { it.plugin.apply(configuration) }
+    val b: KtorPlugin<ContentNegotiationConfig> = install(ContentNegotiation, configuration)
+    return a ?: b
 }

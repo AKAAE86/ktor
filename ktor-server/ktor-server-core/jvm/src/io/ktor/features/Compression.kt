@@ -5,6 +5,7 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.request.*
@@ -175,11 +176,18 @@ public class Compression(compression: Configuration) {
     /**
      * `ApplicationFeature` implementation for [Compression]
      */
-    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, Compression> {
+    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, Compression>,
+        InterceptionsHolder by DefaultInterceptionsHolder("Compression") {
         /**
          * Attribute that could be added to an application call to prevent it's response from being compressed
          */
         public val SuppressionAttribute: AttributeKey<Boolean> = AttributeKey("preventCompression")
+
+        init {
+            defineInterceptions {
+                onResponse(ApplicationSendPipeline.ContentEncoding)
+            }
+        }
 
         override val key: AttributeKey<Compression> = AttributeKey("Compression")
         override fun install(pipeline: ApplicationCallPipeline, configure: Configuration.() -> Unit): Compression {

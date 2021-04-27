@@ -5,7 +5,7 @@
 package io.ktor.features
 
 import io.ktor.application.newapi.*
-import io.ktor.application.newapi.KtorFeature.Companion.makeFeature
+import io.ktor.application.newapi.KtorPlugin.Companion.createPlugin
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.response.*
@@ -17,7 +17,7 @@ private val HeadPhase = PipelinePhase("HEAD")
 /**
  * A feature that automatically respond to HEAD requests
  */
-public val AutoHeadResponse: KtorFeature<Unit> = makeFeature("AutoHeadResponse", {}) {
+public val AutoHeadResponse: KtorPlugin<Unit> = createPlugin("AutoHeadResponse", {}) {
 
     onCall {
         if (call.request.local.method == HttpMethod.Head) {

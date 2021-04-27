@@ -6,9 +6,8 @@ package io.ktor.features
 
 import io.ktor.application.*
 import io.ktor.application.newapi.*
-import io.ktor.application.newapi.KtorFeature.Companion.makeFeature
+import io.ktor.application.newapi.KtorPlugin.Companion.createPlugin
 import io.ktor.http.*
-import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.util.*
 import io.ktor.util.date.*
@@ -77,9 +76,9 @@ private val calendar = object : ThreadLocal<Calendar>() {
  * Adds standard HTTP headers `Date` and `Server` and provides ability to specify other headers
  * that are included in responses.
  */
-public val DefaultHeaders: KtorFeature<DefaultHeadersConfig> = makeFeature("DefaultHeaders", ::DefaultHeadersConfig) {
-    if (feature.headers.getAll(HttpHeaders.Server) == null) {
-        val applicationClass = feature.pipeline.javaClass
+public val DefaultHeaders: KtorPlugin<DefaultHeadersConfig> = createPlugin("DefaultHeaders", ::DefaultHeadersConfig) {
+    if (plugin.headers.getAll(HttpHeaders.Server) == null) {
+        val applicationClass = plugin.pipeline.javaClass
 
         val ktorPackageName: String = Application::class.java.`package`.implementationTitle ?: "ktor"
         val ktorPackageVersion: String = Application::class.java.`package`.implementationVersion ?: "debug"
@@ -87,7 +86,7 @@ public val DefaultHeaders: KtorFeature<DefaultHeadersConfig> = makeFeature("Defa
             applicationClass.`package`.implementationTitle ?: applicationClass.simpleName
         val applicationPackageVersion: String = applicationClass.`package`.implementationVersion ?: "debug"
 
-        feature.headers.append(
+        plugin.headers.append(
             HttpHeaders.Server,
             "$applicationPackageName/$applicationPackageVersion $ktorPackageName/$ktorPackageVersion"
         )
@@ -95,6 +94,6 @@ public val DefaultHeaders: KtorFeature<DefaultHeadersConfig> = makeFeature("Defa
 
 
     onCall { call ->
-        feature.intercept(call)
+        plugin.intercept(call)
     }
 }

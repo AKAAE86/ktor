@@ -5,38 +5,52 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
+import io.ktor.http.content.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.response.*
 import io.ktor.util.*
+import io.ktor.application.newapi.KtorPlugin.Companion.createPlugin as makePlugin
 import io.ktor.util.pipeline.*
+
+
+/**
+ * Configuration for [CachingHeaders] feature
+ */
+public class CachingHeadersConfig {
+    internal val optionsProviders = mutableListOf<(OutgoingContent) -> CachingOptions?>()
+
+    init {
+        optionsProviders.add { content -> content.caching }
+    }
+
+    /**
+     * Registers a function that can provide caching options for a given [OutgoingContent]
+     */
+    public fun options(provider: (OutgoingContent) -> CachingOptions?) {
+        optionsProviders.add(provider)
+    }
+
+    /**
+     * Retrieves caching options for a given content
+     */
+    public fun optionsFor(content: OutgoingContent): List<CachingOptions> {
+        return optionsProviders.mapNotNullTo(ArrayList(optionsProviders.size)) { it(content) }
+    }
+}
 
 /**
  * Feature that set [CachingOptions] headers for every response.
  * It invokes [optionsProviders] for every response and use first non null caching options
  */
-public class CachingHeaders(private val optionsProviders: List<(OutgoingContent) -> CachingOptions?>) {
-    /**
-     * Configuration for [CachingHeaders] feature
-     */
-    public class Configuration {
-        internal val optionsProviders = mutableListOf<(OutgoingContent) -> CachingOptions?>()
-
-        init {
-            optionsProviders.add { content -> content.caching }
-        }
-
-        /**
-         * Registers a function that can provide caching options for a given [OutgoingContent]
-         */
-        public fun options(provider: (OutgoingContent) -> CachingOptions?) {
-            optionsProviders.add(provider)
-        }
-    }
-
-    internal fun interceptor(context: PipelineContext<Any, ApplicationCall>, message: Any) {
-        val call = context.call
-        val options = if (message is OutgoingContent) optionsFor(message) else emptyList()
+public val CachingHeaders: KtorPlugin<CachingHeadersConfig> = makePlugin(
+    "CachingHeaders",
+    { CachingHeadersConfig() }
+) {
+    onResponse.after {
+        val message = subject
+        val options = if (message is OutgoingContent) plugin.optionsFor(message) else emptyList()
 
         if (options.isNotEmpty()) {
             val headers = Headers.build {
@@ -54,33 +68,6 @@ public class CachingHeaders(private val optionsProviders: List<(OutgoingContent)
             headers.forEach { name, values ->
                 values.forEach { responseHeaders.append(name, it) }
             }
-        }
-    }
-
-    /**
-     * Retrieves caching options for a given content
-     */
-    public fun optionsFor(content: OutgoingContent): List<CachingOptions> {
-        return optionsProviders.mapNotNullTo(ArrayList(optionsProviders.size)) { it(content) }
-    }
-
-    /**
-     * `ApplicationFeature` implementation for [ConditionalHeaders]
-     */
-    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, CachingHeaders> {
-        override val key: AttributeKey<CachingHeaders> = AttributeKey("Conditional Headers")
-        override fun install(pipeline: ApplicationCallPipeline, configure: Configuration.() -> Unit): CachingHeaders {
-            val configuration = Configuration().apply(configure)
-            val feature = CachingHeaders(configuration.optionsProviders)
-
-            pipeline.sendPipeline.intercept(ApplicationSendPipeline.After) { message ->
-                feature.interceptor(
-                    this,
-                    message
-                )
-            }
-
-            return feature
         }
     }
 }

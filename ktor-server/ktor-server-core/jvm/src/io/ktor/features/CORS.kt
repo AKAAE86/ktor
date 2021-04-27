@@ -444,8 +444,8 @@ public class CorsConfig {
 /**
  * CORS feature. Please read http://ktor.io/servers/features/cors.html first before using it.
  */
-public val CORS: KtorFeature<CorsConfig> = KtorFeature.makeFeature("CORS", { CorsConfig() }) {
+public val CORS: KtorPlugin<CorsConfig> = KtorPlugin.createPlugin("CORS", { CorsConfig() }) {
     onCall {
-        feature.intercept(this)
+        plugin.intercept(this)
     }
 }

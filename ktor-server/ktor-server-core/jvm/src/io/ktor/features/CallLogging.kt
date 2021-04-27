@@ -5,6 +5,7 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.util.*
@@ -111,10 +112,19 @@ public class CallLogging private constructor(
     /**
      * Installable feature for [CallLogging].
      */
-    public companion object Feature : ApplicationFeature<Application, Configuration, CallLogging> {
+    public companion object Feature : ApplicationFeature<Application, Configuration, CallLogging>,
+        InterceptionsHolder by DefaultInterceptionsHolder("CallLogging") {
         override val key: AttributeKey<CallLogging> = AttributeKey("Call Logging")
+        private val loggingPhase = PipelinePhase("Logging")
+
+        init {
+            defineInterceptions {
+                monitoring(loggingPhase)
+            }
+        }
+
+
         override fun install(pipeline: Application, configure: Configuration.() -> Unit): CallLogging {
-            val loggingPhase = PipelinePhase("Logging")
             val configuration = Configuration().apply(configure)
             val feature = CallLogging(
                 configuration.logger ?: pipeline.log,

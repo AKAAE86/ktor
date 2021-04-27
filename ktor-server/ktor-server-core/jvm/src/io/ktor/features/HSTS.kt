@@ -4,6 +4,7 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.util.*
@@ -92,8 +93,15 @@ public class HSTS(config: Configuration) {
     /**
      * Feature installation object
      */
-    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, HSTS> {
+    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, HSTS>,
+        InterceptionsHolder by DefaultInterceptionsHolder("HSTS") {
         public const val DEFAULT_HSTS_MAX_AGE: Long = 365L * 24 * 3600 // 365 days
+
+        init {
+            defineInterceptions {
+                call()
+            }
+        }
 
         override val key: AttributeKey<HSTS> = AttributeKey("HSTS")
         override fun install(pipeline: ApplicationCallPipeline, configure: Configuration.() -> Unit): HSTS {

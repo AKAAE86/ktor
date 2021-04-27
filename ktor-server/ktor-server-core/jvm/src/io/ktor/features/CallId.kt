@@ -5,6 +5,7 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.util.*
@@ -180,12 +181,19 @@ public class CallId private constructor(
     /**
      * Installable feature for [CallId]
      */
-    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, CallId> {
+    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, CallId>,
+        InterceptionsHolder by DefaultInterceptionsHolder("CallId") {
         /**
          * [ApplicationCallPipeline]'s phase which this feature will be installed to
          */
         public val phase: PipelinePhase = PipelinePhase("CallId")
 
+        init {
+            defineInterceptions {
+                monitoring(phase)
+            }
+        }
+        
         internal val callIdKey = AttributeKey<String>("ExtractedCallId")
 
         override val key: AttributeKey<CallId> = AttributeKey("CallId")

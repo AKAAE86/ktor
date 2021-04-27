@@ -5,6 +5,7 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
 import io.ktor.features.DoubleReceive.*
 import io.ktor.request.*
 import io.ktor.util.*
@@ -43,8 +44,15 @@ public class DoubleReceive internal constructor(private val config: Configuratio
     /**
      * [DoubleReceive] feature's installation object.
      */
-    public companion object Feature : ApplicationFeature<Application, Configuration, DoubleReceive> {
+    public companion object Feature : ApplicationFeature<Application, Configuration, DoubleReceive>,
+        InterceptionsHolder by DefaultInterceptionsHolder("DoubleReceive") {
         override val key: AttributeKey<DoubleReceive> = AttributeKey("DoubleReceive")
+
+        init {
+            defineInterceptions {
+                beforeReceive()
+            }
+        }
 
         override fun install(pipeline: Application, configure: Configuration.() -> Unit): DoubleReceive {
             val feature = DoubleReceive(Configuration().apply(configure))

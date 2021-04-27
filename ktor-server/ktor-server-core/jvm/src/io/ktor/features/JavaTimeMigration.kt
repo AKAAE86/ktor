@@ -9,7 +9,7 @@ import java.time.*
 
 @Suppress("unused", "EXTENSION_SHADOWED_BY_MEMBER")
 @Deprecated("Use maxAgeInSeconds or maxAgeDuration instead.")
-public var CORS.Configuration.maxAge: Duration
+public var CorsConfig.maxAge: Duration
     get() = Duration.ofSeconds(maxAgeInSeconds)
     set(newMaxAge) {
         maxAgeInSeconds = newMaxAge.toMillis() / 1000

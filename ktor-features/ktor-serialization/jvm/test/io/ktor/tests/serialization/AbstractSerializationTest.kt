@@ -19,7 +19,7 @@ abstract class AbstractSerializationTest {
     protected val serializer = TestEntity.serializer()
 
     protected abstract val testContentType: ContentType
-    protected abstract fun ContentNegotiation.Configuration.configureContentNegotiation()
+    protected abstract fun ContentNegotiationConfig.configureContentNegotiation()
 
     protected abstract fun simpleSerialize(any: TestEntity): ByteArray
     protected abstract fun simpleDeserialize(t: ByteArray): TestEntity

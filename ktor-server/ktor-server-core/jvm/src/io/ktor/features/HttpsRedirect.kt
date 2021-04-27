@@ -6,22 +6,21 @@ package io.ktor.features
 
 import io.ktor.application.*
 import io.ktor.application.newapi.*
-import io.ktor.application.newapi.KtorFeature.Companion.makeFeature
+import io.ktor.application.newapi.KtorPlugin.Companion.createPlugin
 import io.ktor.http.*
-import io.ktor.http.HttpHeaders.Authorization
 import io.ktor.response.*
 import io.ktor.util.*
 
 /**
  * Redirect non-secure requests to HTTPS
  */
-public val HttpsRedirect: KtorFeature<HttpsRedirectConfig> = makeFeature("HttpsRedirect", { HttpsRedirectConfig() }) {
+public val HttpsRedirect: KtorPlugin<HttpsRedirectConfig> = createPlugin("HttpsRedirect", { HttpsRedirectConfig() }) {
     onCall { call ->
         if (call.request.origin.scheme == "http" &&
-            feature.excludePredicates.none { predicate -> predicate(call) }
+            plugin.excludePredicates.none { predicate -> predicate(call) }
         ) {
-            val redirectUrl = call.url { protocol = URLProtocol.HTTPS; port = feature.sslPort }
-            call.respondRedirect(redirectUrl, feature.permanentRedirect)
+            val redirectUrl = call.url { protocol = URLProtocol.HTTPS; port = plugin.sslPort }
+            call.respondRedirect(redirectUrl, plugin.permanentRedirect)
             finish()
         }
     }

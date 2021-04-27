@@ -17,12 +17,23 @@ public final class io/ktor/auth/Authentication$Configuration {
 	public final fun register (Lio/ktor/auth/AuthenticationProvider;)V
 }
 
-public final class io/ktor/auth/Authentication$Feature : io/ktor/application/ApplicationFeature {
+public final class io/ktor/auth/Authentication$Feature : io/ktor/application/ApplicationFeature, io/ktor/application/newapi/InterceptionsHolder {
+	public fun defineInterceptions (Lkotlin/jvm/functions/Function1;)V
+	public fun getAfterResponseInterceptions ()Ljava/util/List;
 	public final fun getAuthenticatePhase ()Lio/ktor/util/pipeline/PipelinePhase;
+	public fun getBeforeReceiveInterceptions ()Ljava/util/List;
+	public fun getBeforeResponseInterceptions ()Ljava/util/List;
+	public fun getCallInterceptions ()Ljava/util/List;
 	public final fun getChallengePhase ()Lio/ktor/util/pipeline/PipelinePhase;
+	public fun getFallbackInterceptions ()Ljava/util/List;
 	public fun getKey ()Lio/ktor/util/AttributeKey;
+	public fun getMonitoringInterceptions ()Ljava/util/List;
+	public fun getName ()Ljava/lang/String;
+	public fun getOnReceiveInterceptions ()Ljava/util/List;
+	public fun getOnResponseInterceptions ()Ljava/util/List;
 	public fun install (Lio/ktor/application/Application;Lkotlin/jvm/functions/Function1;)Lio/ktor/auth/Authentication;
 	public synthetic fun install (Lio/ktor/util/pipeline/Pipeline;Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;
+	public fun newPhase ()Lio/ktor/util/pipeline/PipelinePhase;
 }
 
 public final class io/ktor/auth/AuthenticationContext {

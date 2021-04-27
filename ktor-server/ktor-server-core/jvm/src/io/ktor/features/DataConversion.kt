@@ -5,6 +5,7 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
 import io.ktor.util.*
 import java.lang.reflect.*
 import kotlin.reflect.*
@@ -62,7 +63,9 @@ public class DataConversion(private val converters: Map<Type, ConversionService>
     /**
      * Object for installing feature
      */
-    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, DataConversion> {
+    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, DataConversion>,
+        InterceptionsHolder by DefaultInterceptionsHolder("DataConversion") {
+
         override fun install(pipeline: ApplicationCallPipeline, configure: Configuration.() -> Unit): DataConversion {
             val configuration = Configuration().apply(configure)
             return DataConversion(configuration.converters)

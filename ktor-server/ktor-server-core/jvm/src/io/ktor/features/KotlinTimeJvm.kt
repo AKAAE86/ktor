@@ -12,7 +12,7 @@ import kotlin.time.*
  * Duration to tell the client to keep CORS options.
  */
 @ExperimentalTime
-public var CORS.Configuration.maxAgeDuration: Duration
+public var CorsConfig.maxAgeDuration: Duration
     get() = maxAgeInSeconds.seconds
     set(newMaxAge) {
         require(!newMaxAge.isNegative()) { "Only non-negative durations can be specified" }

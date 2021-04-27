@@ -5,6 +5,8 @@
 package io.ktor.features
 
 import io.ktor.application.*
+import io.ktor.application.newapi.*
+import io.ktor.http.content.*
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.response.*
@@ -126,8 +128,16 @@ public class StatusPages(config: Configuration) {
     /**
      * Feature installation object
      */
-    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, StatusPages> {
+    public companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, StatusPages>,
+        InterceptionsHolder by DefaultInterceptionsHolder("StatusPages") {
         override val key: AttributeKey<StatusPages> = AttributeKey("Status Pages")
+
+        init {
+            defineInterceptions {
+                afterResponse()
+                monitoring()
+            }
+        }
 
         override fun install(pipeline: ApplicationCallPipeline, configure: Configuration.() -> Unit): StatusPages {
             val configuration = Configuration().apply(configure)

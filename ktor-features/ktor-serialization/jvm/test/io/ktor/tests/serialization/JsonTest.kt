@@ -11,7 +11,7 @@ import io.ktor.serialization.*
 class JsonTest : AbstractSerializationTest() {
     override val testContentType: ContentType = ContentType.Application.Json
 
-    override fun ContentNegotiation.Configuration.configureContentNegotiation() {
+    override fun ContentNegotiationConfig.configureContentNegotiation() {
         json()
     }
 
